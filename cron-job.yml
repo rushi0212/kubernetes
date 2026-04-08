@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: first-cron-job
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: minute-backup
+        spec:
+          containers:
+          - name: busybox-image
+            image: busybox:latest
+            command:
+            - /bin/sh
+            - -c
+            - >
+              echo "Backup Started" ;
+              mkdir -p /backups &&
+              mkdir -p /demo-data &&
+              cp -r /demo-data /backups &&
+              echo "Backup Complete" ;
+            volumeMounts:
+            - name: data-volume
+              mountPath: /demo-data
+            - name: backup-volume
+              mountPath: /backups
+
+          restartPolicy: OnFailure
+
+          volumes:
+          - name: data-volume
+            hostPath:
+              path: /demo-data
+              type: DirectoryOrCreate
+          - name: backup-volume
+            hostPath:
+              path: /backups
+              type: DirectoryOrCreate
